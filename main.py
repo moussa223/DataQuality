@@ -10,7 +10,9 @@ def tan_map():
     stops = pd.read_csv("data/stops.csv", sep = ',')
     shapes = pd.read_csv('data/shapes.csv')
     trips = pd.read_csv('data/trips.csv')
+    routes = pd.read_csv('data/routes.csv')
     direction_ids = dict(zip(trips['shape_id'].astype(str), trips['direction_id']))
+    route_colors = dict(zip(routes['route_id'].astype(str), routes['route_color']))
 
     map = folium.Map(location=[47.2184, -1.5536], zoom_start=12)
     
@@ -27,11 +29,18 @@ def tan_map():
         points = group[['shape_pt_lat', 'shape_pt_lon']].values.tolist()
 
         if str(shape_id) in direction_ids and direction_ids[str(shape_id)] == 0:
-            folium.PolyLine(locations=points, color='red').add_to(map)
+            if str(shape_id) in trips['shape_id'].astype(str).values:
+                trip = trips.loc[trips['shape_id'].astype(str) == str(shape_id)].iloc[0]
+                route_id = trip['route_id']
+                if str(route_id) in route_colors:
+                    route_color = route_colors[str(route_id)]
+                    folium.PolyLine(locations=points, color="#"+route_color).add_to(map)
 
     folium.LayerControl().add_to(map)
     map.save('index.html')
     return map.get_root().render()
+
+
 
 if __name__ == "__main__":
     app.run()
