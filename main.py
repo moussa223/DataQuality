@@ -20,8 +20,10 @@ def tan_map():
     map = folium.Map(location=[47.2184, -1.5536], zoom_start=12, tiles='cartodbdark_matter')
 
     marker_cluster = MarkerCluster(name='Markers').add_to(map)
-    line_cluster = MarkerCluster(name='Lines').add_to(map)
-
+    default_cluster = MarkerCluster(name='Lines').add_to(map)
+    train_cluster = MarkerCluster(name='Tram').add_to(map)
+    bus_cluster = MarkerCluster(name='Bus').add_to(map)
+    navibus_cluster = MarkerCluster(name='Navibus').add_to(map)
     
     # Jointure des données pour obtenir les informations nécessaires sur les arrêts enfants et parents
     merged_stops = pd.merge(stop_times, stops, on='stop_id', how='right')
@@ -61,8 +63,16 @@ def tan_map():
                 route_id = trip['route_id']
                 if str(route_id) in route_colors:
                     route_color = route_colors[str(route_id)]
-
-
+                    
+                    route_type = routes.loc[routes['route_id'] == str(route_id), 'route_type'].values[0]
+                    if route_type == 0:
+                        line_cluster = train_cluster
+                    elif route_type == 3:
+                        line_cluster = bus_cluster
+                    elif route_type == 4:
+                        line_cluster = navibus_cluster
+                    else:
+                        line_cluster = default_cluster
 
                     folium.PolyLine(locations=points, color="#"+route_color).add_to(line_cluster)
     
