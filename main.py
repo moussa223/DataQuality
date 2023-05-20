@@ -11,11 +11,10 @@ def tan_map():
     stops = pd.read_csv("data/stops.csv", sep = ',')
     shapes = pd.read_csv('data/shapes.csv', usecols=['shape_id', 'shape_pt_lat', 'shape_pt_lon'])
     trips = pd.read_csv("data/trips.csv", sep=',', usecols=['trip_id', 'route_id', 'shape_id', 'direction_id'])
-    routes = pd.read_csv("data/routes.csv", sep=',', usecols=['route_id', 'route_type', 'route_color'])
+    routes = pd.read_csv("data/routes.csv", sep=',', usecols=['route_id', 'route_type', 'route_color', 'route_short_name', "route_text_color"])
     stop_times = pd.read_csv("data/stop_times.csv", sep=',', usecols=['stop_id', 'trip_id'])
     direction_ids = dict(zip(trips['shape_id'].astype(str), trips['direction_id']))
     route_colors = dict(zip(routes['route_id'].astype(str), routes['route_color']))
-    route_id_type = routes.loc[:, ['route_id', 'route_type']]
 
     map = folium.Map(location=[47.2184, -1.5536], zoom_start=12, tiles='cartodbdark_matter')
 
@@ -43,12 +42,13 @@ def tan_map():
         if stop['route_type'] in [0, 3, 4]:
             icon = 'train' if stop['route_type'] == 0 else 'bus' if stop['route_type'] == 3 else 'ship'
             color = 'red' if icon == 'train' else 'lightgray' if icon == 'bus' else 'blue'
+            html = "<body style='background-color:rgb(228,228,228);'><div style='width: 50px; height: 50px; background-color: #"+str(stop['route_color'])+"; color: #"+str(stop['route_text_color'])+"; text-align: center; line-height: 50px; font-size: 20px;'><strong>"+str(stop['route_short_name'])+"</strong></div>"
 
+            html += "<b>"+str(stop['stop_name'])+"</b><br>"
             if stop['wheelchair_boarding'] == 1:
-                html = "<b>"+stop['stop_name']+"</b><br>Accessible aux personnes Handicapées"
-            else:
-                html = "<b>"+stop['stop_name']+"</b><br>"
-            iframe = folium.IFrame(html=html, width=200, height=100)
+                html += "Accessible aux personnes Handicapées"
+            html += "</body>"
+            iframe = folium.IFrame(html=html, width=200, height=200)
             folium.Marker(location=[stop['stop_lat'], stop['stop_lon']],
                         popup=folium.Popup(iframe),
                         icon=folium.Icon(color=color, icon=icon, prefix='fa')
@@ -63,7 +63,7 @@ def tan_map():
                 route_id = trip['route_id']
                 if str(route_id) in route_colors:
                     route_color = route_colors[str(route_id)]
-                    
+
                     route_type = routes.loc[routes['route_id'] == str(route_id), 'route_type'].values[0]
                     if route_type == 0:
                         line_cluster = train_cluster
