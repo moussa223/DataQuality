@@ -42,9 +42,13 @@ def tan_map():
             icon = 'train' if stop['route_type'] == 0 else 'bus' if stop['route_type'] == 3 else 'ship'
             color = 'red' if icon == 'train' else 'lightgray' if icon == 'bus' else 'blue'
 
-
+            if stop['wheelchair_boarding'] == 1:
+                html = "<b>"+stop['stop_name']+"</b><br>Accessible aux personnes Handicapées"
+            else:
+                html = "<b>"+stop['stop_name']+"</b><br>"
+            iframe = folium.IFrame(html=html, width=200, height=100)
             folium.Marker(location=[stop['stop_lat'], stop['stop_lon']],
-                        popup=folium.Popup(stop['stop_name']),
+                        popup=folium.Popup(iframe),
                         icon=folium.Icon(color=color, icon=icon, prefix='fa')
                         ).add_to(marker_cluster)
 
