@@ -1,9 +1,24 @@
 import folium
 import pandas as pd
+import haversine as hs
 from flask import Flask
 from folium.plugins import MarkerCluster
 
 app = Flask(__name__)
+def find_connections(stop_tuple, shapes_csv, trips_csv, routes_csv) {
+    stop_lat = stop_tuple[1].loc['stop_lat']
+    stop_lon = stop_tuple[1].loc['stop_lon']
+    stop_coordinates = (stop_lat,stop_lon)
+    
+    for shape_id, group in shapes.groupby('shape_id'):
+        points = group[['shape_pt_lat', 'shape_pt_lon']].values.tolist()
+        for (point in points):
+            distance_between_stop_and_point = hs.haversine(point_coordinates,stop_coordinates,unit=Unit.METERS)
+            if (distance_between_stop_and_point <= 3):
+                #On regarde la ligne qui correspond au shape_id
+                line_attached_to_shape_id = trips[trips['shape_id'] == shape_id].iloc
+                break
+}
 
 @app.route("/")
 def tan_map():
@@ -21,6 +36,7 @@ def tan_map():
 
     for index, stop in stops.iterrows():
         if stop['location_type']:
+            marker_popup = '''<h1>{stop_name}</h1>\n'''
             folium.Marker(location=[stop['stop_lat'], stop['stop_lon']],
                       popup=stop['stop_name'],
                       icon=folium.Icon(color='blue', icon='bus', prefix='fa')
