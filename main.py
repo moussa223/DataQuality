@@ -8,26 +8,28 @@ app = Flask(__name__)
 def get_line_connections_string(associated_lines):
     string = "Correspondances : \n"
     for i in range(len(associated_lines)):
-        string += "Ligne " + associated_lines[i]
+        string += "Ligne " + str(associated_lines[i])
         if i < len(associated_lines) - 1:
             string += "\n"
     return string
 
-def find_connections(stop, shapes_csv, trips_csv):
+def find_connections(stop, shapes_dataframe, trips_dataframe,routes_dataframe):
     associated_lines = []
     stop_lat = stop.loc['stop_lat']
     stop_lon = stop.loc['stop_lon']
     stop_coordinates = (stop_lat,stop_lon)
     
-    for shape_id, group in shapes_csv.groupby('shape_id'):
+    for shape_id, group in shapes_dataframe.groupby('shape_id'):
         points = group[['shape_pt_lat', 'shape_pt_lon']].values.tolist()
         for point in points:
             distance_between_stop_and_point = hs.haversine(point,stop_coordinates,unit=hs.Unit.METERS)
             if (distance_between_stop_and_point <= 3):
                 #On regarde la ligne qui correspond au shape_id, sachant qu'une forme est toujours rattachée à une seule ligne dans le jeu de données
-                line_attached_to_shape_id = trips_csv[trips_csv['shape_id'] == shape_id]['route_id'].iloc[0]
+                line_attached_to_shape_id = trips_dataframe[trips_dataframe['shape_id'] == shape_id]['route_id'].iloc[0]
+                route_info = routes_dataframe[routes_dataframe['route_id'] == line_attached_to_shape_id]
+                route_short_name = route_info.iloc[0]['route_short_name']
                 if line_attached_to_shape_id not in associated_lines:
-                    associated_lines.append(line_attached_to_shape_id)
+                    associated_lines.append(route_short_name)
                 break
     return associated_lines
 
@@ -48,7 +50,7 @@ def tan_map():
     for index, stop in stops.iterrows():
         if stop['location_type']:
             print("Traitement de l'arrêt {}".format(stop['stop_name'].strip()))
-            marker_popup = '''<h1>{stop_name}</h1>\n{connections}'''.format(stop_name = stop['stop_name'].strip(), connections=get_line_connections_string(find_connections(stop,shapes,trips)))
+            marker_popup = '''<h1>{stop_name}</h1>\n{connections}'''.format(stop_name = stop['stop_name'].strip(), connections=get_line_connections_string(find_connections(stop,shapes,trips,routes)))
             folium.Marker(location=[stop['stop_lat'], stop['stop_lon']],
                       popup=marker_popup,
                       icon=folium.Icon(color='blue', icon='bus', prefix='fa')
