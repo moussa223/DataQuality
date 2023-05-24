@@ -5,6 +5,7 @@ from flask import Flask
 from folium.plugins import MarkerCluster
 from folium.plugins import FastMarkerCluster
 
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -55,6 +56,14 @@ def home():
                 html += "PAS Accessible aux personnes handicapées"
 
             html += "</div><br><br>"
+
+            # Ajout de l'image pour l'arrêt "Haluchère"
+            if stop['stop_name'] == "Haluchère-Batignolles":
+                # Chemin vers l'image PNG pour l'arrêt "Haluchère"
+                image_path = "https://lh5.googleusercontent.com/p/AF1QipPWkomnBlyVrIP1dwKaAqHZs2FIM02S-gBrLUda=w500-h500-k-no"
+
+                # Construction de l'HTML pour le point avec l'image
+                html += "<img src='{}' width='100' height='100'><br>".format(image_path)
 
         route_html += html + "</body>"
         iframe = folium.IFrame(html=route_html, width=300, height=200)
