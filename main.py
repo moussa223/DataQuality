@@ -45,6 +45,9 @@ def home():
         route_html = "<body style='background-color:rgb(228,228,228);'>"
         html = ""
 
+        #Afficher une seule fois le nom de la route en titre
+        html += "<b>" + stop['stop_name'] + "</b><br>"
+
         # Ajout de l'image pour l'arrêt "Haluchère"
         if stop['stop_name'] == "Haluchère-Batignolles":
             # Chemin vers l'image PNG pour l'arrêt "Haluchère"
@@ -55,10 +58,9 @@ def home():
 
         for route in stop['routes'].values():
             # Construction de la div pour chaque route
-            html += "<div style='width: 50px; height: 50px; background-color:"+ route['route_color'] +"; color: "+ route['route_text_color'] +"; text-align: center; line-height: 50px; font-size: 20px;'>"+ route['route_short_name'] + "</div>"
+            html += "<p>Correspondance: </p> <div style='width: 50px; height: 50px; background-color:"+ route['route_color'] +"; color: "+ route['route_text_color'] +"; text-align: center; line-height: 50px; font-size: 20px;'>"+ route['route_short_name'] + "</div>"
 
             # Construction de l'HTML pour le point
-            html += "<b>"+ stop['stop_name'] +"</b><br>"
             if route['wheelchair_boarding'] == 1:
                 html += "Accessible aux personnes handicapées"
             else:
