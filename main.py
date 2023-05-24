@@ -16,7 +16,7 @@ def home():
     map = folium.Map(location=[47.2184, -1.5536], zoom_start=12, tiles='cartodbdark_matter')
     
     #Lectures des fichiers CSV 
-    routes = pd.read_csv("data/routes.csv", sep=',', usecols=['route_id', 'route_type', 'route_color', 'route_short_name', "route_text_color"])
+    routes = pd.read_csv("data/routes.csv", sep=',', usecols=['route_id', 'route_type', 'route_color', 'route_long_name', 'route_short_name', "route_text_color"])
     route_colors = dict(zip(routes['route_id'].astype(str), routes['route_color']))
     trips = pd.read_csv("data/trips.csv", sep=',', usecols=['trip_id', 'route_id', 'shape_id', 'direction_id'])
     shapes = pd.read_csv('data/shapes.csv', usecols=['shape_id', 'shape_pt_lat', 'shape_pt_lon'])
@@ -109,25 +109,144 @@ def home():
                 route_id = trip['route_id']
                 if str(route_id) in route_colors:
                     route_color = route_colors[str(route_id)]
+                    route_long_name = routes.loc[routes['route_id'] == str(route_id), 'route_long_name'].values[0]   
+                    route_short_name = routes.loc[routes['route_id'] == str(route_id), 'route_short_name'].values[0]    
+                    route_text_color = routes.loc[routes['route_id'] == str(route_id), 'route_text_color'].values[0]
 
+                    
                     route_type = routes.loc[routes['route_id'] == str(route_id), 'route_type'].values[0]
                     if route_type == 0:
+                        route_type_name = "Tram"
                         line_cluster = train_cluster
                     elif route_type == 3:
+                        route_type_name = "Bus"
                         line_cluster = bus_cluster
                     elif route_type == 4:
+                        route_type_name = "Navibus"
                         line_cluster = navibus_cluster
                     else:
+                        route_type_name = "Aucune idée"
                         line_cluster = default_cluster
 
-                    folium.PolyLine(locations=points, color="#"+route_color).add_to(line_cluster)
+                    route_html = "<body style='background-color:rgb(228,228,228);'>"
+                    html = ""
+                  
+                    # Construction de la div pour chaque route
+                    html += "<div style='width: 50px; height: 50px; background-color: #"+ str(route_color) +"; color: #"+ str(route_text_color) +"; text-align: center; line-height: 50px; font-size: 20px;'>"+ str(route_short_name) + "</div>"
+                    html += "<div><strong>"+str(route_long_name)+"</strong></div>"
+                    html += "<div>C'est une ligne de : <strong>"+str(route_type_name)+"</strong></div>"
 
+
+                    html += "</div><br><br>"
+
+                    route_html += html + "</body>"
+                    iframe = folium.IFrame(html=route_html, width=400, height=100)
+                    folium.PolyLine(locations=points, popup=folium.Popup(iframe),color="#"+route_color).add_to(line_cluster)
 
     folium.LayerControl().add_to(map)
+
+    map.get_root().add_child(legend())
     map.save('index.html')
     return map.get_root().render()
 
 
+def legend():
+    from branca.element import Template, MacroElement
+    template = """
+        {% macro html(this, kwargs) %}
+
+        <!doctype html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>TAN</title>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        
+        <script>
+        $( function() {
+            $( "#maplegend" ).draggable({
+                            start: function (event, ui) {
+                                $(this).css({
+                                    right: "auto",
+                                    top: "auto",
+                                    bottom: "auto"
+                                });
+                            }
+                        });
+        });
+
+        </script>
+        </head>
+        <body>
+
+        
+        <div id='maplegend' class='maplegend' 
+            style='position: absolute; z-index:9999; border:2px solid grey; background-color:rgba(255, 255, 255, 0.8);
+            border-radius:6px; padding: 10px; font-size:25px; right: 20px; bottom: 20px;'>
+            
+        <div class='legend-title'><i class="fa-sharp fa-solid fa-location-pin"></i> Légende (draggable)</div>
+        <div class='legend-scale'>
+        <ul class='legend-labels'>
+            <li><i class="fa-solid fa-bus" style="color: #a3a3a3;"></i> Bus</li>
+            <li><i class="fa-solid fa-train" style="color: #d33d29;"></i> Tram</li>
+            <li><i class="fa-solid fa-ship" style="color: #37a7da;"></i> Navibus</li>
+            
+
+        </ul>
+        </div>
+        </div>
+        
+        </body>
+        </html>
+
+        <style type='text/css'>
+        .maplegend .legend-title {
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 90%;
+            }
+        .maplegend .legend-scale ul {
+            margin: 0;
+            margin-bottom: 5px;
+            padding: 0;
+            float: left;
+            list-style: none;
+            }
+        .maplegend .legend-scale ul li {
+            font-size: 80%;
+            list-style: none;
+            margin-left: 0;
+            line-height: 18px;
+            margin-bottom: 2px;
+            }
+        .maplegend ul.legend-labels li span {
+            display: block;
+            float: left;
+            height: 16px;
+            width: 30px;
+            margin-right: 5px;
+            margin-left: 0;
+            border: 1px solid #999;
+            }
+        .maplegend .legend-source {
+            font-size: 80%;
+            color: #777;
+            clear: both;
+            }
+        .maplegend a {
+            color: #777;
+            }
+        </style>
+        {% endmacro %}"""
+  
+    macro = MacroElement()
+    macro._template = Template(template)
+    return macro
 
 if __name__ == "__main__":
     app.run()
