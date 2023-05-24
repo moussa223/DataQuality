@@ -44,6 +44,15 @@ def home():
         #Génération du HTML pour chaque arret
         route_html = "<body style='background-color:rgb(228,228,228);'>"
         html = ""
+
+        # Ajout de l'image pour l'arrêt "Haluchère"
+        if stop['stop_name'] == "Haluchère-Batignolles":
+            # Chemin vers l'image PNG pour l'arrêt "Haluchère"
+            image_path = "https://lh5.googleusercontent.com/p/AF1QipPWkomnBlyVrIP1dwKaAqHZs2FIM02S-gBrLUda=w500-h500-k-no"
+
+            # Construction de l'HTML pour le point avec l'image
+            html += "<img src='{}' width='100' height='100'><br>".format(image_path)
+
         for route in stop['routes'].values():
             # Construction de la div pour chaque route
             html += "<div style='width: 50px; height: 50px; background-color:"+ route['route_color'] +"; color: "+ route['route_text_color'] +"; text-align: center; line-height: 50px; font-size: 20px;'>"+ route['route_short_name'] + "</div>"
@@ -57,13 +66,6 @@ def home():
 
             html += "</div><br><br>"
 
-            # Ajout de l'image pour l'arrêt "Haluchère"
-            if stop['stop_name'] == "Haluchère-Batignolles":
-                # Chemin vers l'image PNG pour l'arrêt "Haluchère"
-                image_path = "https://lh5.googleusercontent.com/p/AF1QipPWkomnBlyVrIP1dwKaAqHZs2FIM02S-gBrLUda=w500-h500-k-no"
-
-                # Construction de l'HTML pour le point avec l'image
-                html += "<img src='{}' width='100' height='100'><br>".format(image_path)
 
         route_html += html + "</body>"
         iframe = folium.IFrame(html=route_html, width=300, height=200)
