@@ -1,15 +1,17 @@
 import json
 import folium
 import pandas as pd
+import os
 from flask import Flask
 from folium.plugins import MarkerCluster
 from folium.plugins import FastMarkerCluster
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-
     #Lectures du fichier JSON 
     with open('clear_data.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
@@ -24,40 +26,43 @@ def home():
     
     #Definition des clusters
     #Markers
-    marker_default_cluster = FastMarkerCluster(name='Markers', data=[]).add_to(map)
-    marker_train_cluster = FastMarkerCluster(name='Markers - Tram', data=[], options={"disableClusteringAtZoom":13}).add_to(map)
-    marker_bus_cluster = FastMarkerCluster(name='Markers - Bus', data=[], options={"disableClusteringAtZoom":15}).add_to(map)
-    marker_navibus_cluster = FastMarkerCluster(name='Markers - Navibus', data=[], options={"disableClusteringAtZoom":12 }).add_to(map)
+    marker_default_cluster = FastMarkerCluster(name='Markers', data=[], control=False).add_to(map)
+    marker_train_cluster = FastMarkerCluster(name='Markers - Tram', data=[], options={"disableClusteringAtZoom":13}, show=False).add_to(map)
+    marker_bus_cluster = FastMarkerCluster(name='Markers - Bus', data=[], options={"disableClusteringAtZoom":15}, show=False).add_to(map)
+    marker_navibus_cluster = FastMarkerCluster(name='Markers - Navibus', data=[], options={"disableClusteringAtZoom":12 }, show=False).add_to(map)
     
     #Lignes
-    default_cluster = MarkerCluster(name='Lines', ).add_to(map)
-    train_cluster = MarkerCluster(name='Ligne - Tram').add_to(map)
-    bus_cluster = MarkerCluster(name='Ligne - Bus').add_to(map)
-    navibus_cluster = MarkerCluster(name='Ligne - Navibus').add_to(map)
+    default_cluster = MarkerCluster(name='Lines', control=False).add_to(map)
+    train_cluster = MarkerCluster(name='Ligne - Tram', show=False).add_to(map)
+    bus_cluster = MarkerCluster(name='Ligne - Bus', show=False).add_to(map)
+    navibus_cluster = MarkerCluster(name='Ligne - Navibus', show=False).add_to(map)
 
     for stop_id, stop in data.items():
         first_child_stop = list(stop['routes'].values())[0]
 
         route_html = "<body style='background-color:rgb(228,228,228);'>"
-        html = ""
+        html = "<b>"+ stop['stop_name'] +"</b><br><br>"
         icons = {'0': 'train', '3': 'bus', '4': 'ship'}
         colors = {'0': 'red', '3': 'lightgray', '4': 'blue'}
+        if stop['stop_name'] == "Beaulieu" or stop['stop_name'] == "Ile de Nantes":
+            route_html += "<div>"
 
+            street_view_url = StreetViewService(stop['stop_lat'], stop['stop_lon'], 200, 200)
+            street_view_image = "<img style='width = 100%; height= auto;' class='fit-picture' src='"+street_view_url+"' alt='Photo de l arret de "+stop['stop_name']+"'>" 
+            
+            route_html += street_view_image + "</div>"   
         for route in stop['routes'].values():
             # Construction de la div pour chaque route
             html += "<div style='width: 50px; height: 50px; background-color:"+ route['route_color'] +"; color: "+ route['route_text_color'] +"; text-align: center; line-height: 50px; font-size: 20px;'>"+ route['route_short_name'] + "</div>"
 
+            html += "<strong>"+route["route_name"]+"</strong><br>"
             # Construction de l'HTML pour le point
-            html += "<b>"+ stop['stop_name'] +"</b><br>"
-            if route['wheelchair_boarding'] == 1:
-                html += "Accessible aux personnes handicapées"
-            else:
-                html += "PAS Accessible aux personnes handicapées"
+            html += "Wheelchair Boarding : "+str(route['wheelchair_boarding'])
 
             html += "</div><br><br>"
 
         route_html += html + "</body>"
-        iframe = folium.IFrame(html=route_html, width=300, height=200)
+        iframe = folium.IFrame(html=route_html, width=400, height=300)
 
         route_type_dict = {}
         for route in stop['routes'].values():
@@ -247,6 +252,14 @@ def legend():
     macro = MacroElement()
     macro._template = Template(template)
     return macro
+
+
+def StreetViewService(lat, lng, width, height):
+    
+    url_image = f"https://maps.googleapis.com/maps/api/streetview?location={lat},{lng}&size={width}x{height}&key={os.getenv('API_KEY')}"
+    return url_image
+
+    
 
 if __name__ == "__main__":
     app.run()
