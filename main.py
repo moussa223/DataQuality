@@ -57,20 +57,16 @@ def home():
             html += "<img src='{}' width='100' height='100'><br>".format(image_path)
 
         # Affichage d'un label Correspondance
-        html += "<p>Correspondance: </p><br>"
+        html += "<span>Correspondances :</span><br>"
+
 
         for route in stop['routes'].values():
             # Construction de la div pour chaque route
-            html += "<div style='width: 50px; height: 50px; background-color:"+ route['route_color'] +"; color: "+ route['route_text_color'] +"; text-align: center; line-height: 50px; font-size: 20px;'>"+ route['route_short_name'] + "</div>"
-
-            # Construction de l'HTML pour le point
-            if route['wheelchair_boarding'] == 1:
-                html += "Accessible aux personnes handicapées"
-            else:
-                html += "PAS Accessible aux personnes handicapées"
-
-            html += "</div><br><br>"
-
+            html += "<br><span><strong>"+route['route_name']+\
+                "</strong></span><br><div style='width: 50px; height: 50px; background-color:"+ route['route_color'] +\
+                    "; color: "+ route['route_text_color'] +\
+                        "; text-align: center; line-height: 50px; font-size: 20px;'>" + route['route_short_name'] +\
+                              "</div><span>Wheelchair Boarding : "+str(route['wheelchair_boarding'])+"</span><br>"
 
         route_html += html + "</body>"
         iframe = folium.IFrame(html=route_html, width=300, height=200)
